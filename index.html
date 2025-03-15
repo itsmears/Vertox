@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertox Blog Platform</title>
+    <meta name="description" content="Discover amazing blog posts on various topics">
+    <meta property="og:title" content="Vertox Blog Platform">
+    <meta property="og:description" content="Discover amazing blog posts on various topics">
+    <meta property="og:type" content="website">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --card-bg: #f3f4f6;
+            --island-bg: rgba(28, 28, 30, 0.6);
+            --island-expanded-bg: rgba(28, 28, 30, 0.8);
+            --animation-duration: 0.3s;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #111827;
+            --text-color: #f3f4f6;
+            --card-bg: #1f2937;
+            --island-bg: rgba(255, 255, 255, 0.1);
+            --island-expanded-bg: rgba(255, 255, 255, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+        }
+
+        .dynamic-island {
+            background: var(--island-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--animation-duration) cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            width: 120px;
+            height: 45px;
+        }
+
+        .dynamic-island.expanded {
+            width: min(600px, 90vw);
+            height: 55px;
+            background: var(--island-expanded-bg);
+        }
+
+        .search-icon {
+            color: white;
+            transition: transform var(--animation-duration);
+        }
+
+        .expanded .search-icon {
+            transform: translateX(-50%);
+            opacity: 0;
+        }
+
+        .search-bar {
+            position: absolute;
+            width: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all var(--animation-duration);
+            opacity: 0;
+        }
+
+        .expanded .search-bar {
+            width: calc(100% - 4rem);
+            padding: 0.5rem 1rem;
+            margin-left: 1rem;
+            opacity: 1;
+        }
+
+        .search-bar::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .theme-switch {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--island-bg);
+            backdrop-filter: blur(20px);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+
+        .theme-switch:hover {
+            transform: scale(1.1);
+        }
+
+        .posts-container {
+            max-width: 1400px;
+            margin: 7rem auto 2rem;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+            position: relative;
+            transform: translateY(50px);
+            opacity: 0;
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .post-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .post-card:hover .post-image {
+            transform: scale(1.1);
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .post-description {
+            color: var(--text-color);
+            opacity: 0.8;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .post-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .post-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .post-meta {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(128, 128, 128, 0.2);
+        }
+
+        .like-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            transition: all 0.3s;
+        }
+
+        .like-button:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .like-button.liked {
+            color: #ef4444;
+        }
+
+        .post-date {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        #load-more {
+            display: block;
+            margin: 2rem auto;
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        #load-more:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .posts-container {
+                margin-top: 6rem;
+                padding: 1rem;
+                grid-template-columns: 1fr;
+            }
+
+            .dynamic-island {
+                width: 100px;
+            }
+
+            .post-card {
+                margin-bottom: 1rem;
+            }
+
+            .post-title {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .loading-dots div {
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        .loading-dots div:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots div:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            to {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="dynamic-island" id="dynamicIsland">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search posts...">
+        </div>
+        <button class="theme-switch" id="themeSwitch">
+            <span class="material-icons">dark_mode</span>
+        </button>
+    </header>
+
+    <div class="posts-container" id="postsContainer">
+        <!-- Posts will be dynamically inserted here -->
+    </div>
+
+    <div class="loading hidden" id="loading">
+        <div class="loading-dots">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <button id="load-more" class="hidden">
+        <span class="material-icons">add</span> Load More
+    </button>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8J2CpnOfNUlGRiCgwWjcYrp6Fz9UraBw",
+            authDomain: "vertox-94ce3.firebaseapp.com",
+            projectId: "vertox-94ce3",
+            storageBucket: "vertox-94ce3.firebasestorage.app",
+            messagingSenderId: "1090403125068",
+            appId: "1:1090403125068:web:5a813501021c081aea71e9",
+            measurementId: "G-4MYR2F696Q"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Theme switcher
+        const themeSwitch = document.getElementById('themeSwitch');
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        function setTheme(isDark) {
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeSwitch.innerHTML = `<span class="material-icons">${isDark ? 'light_mode' : 'dark_mode'}</span>`;
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme === 'dark');
+        } else {
+            setTheme(prefersDarkScheme.matches);
+        }
+
+        themeSwitch.addEventListener('click', () => {
+            const isDark = document.body.getAttribute('data-theme') !== 'dark';
+            setTheme(isDark);
+        });
+
+        // Dynamic Island Search
+        const dynamicIsland = document.getElementById('dynamicIsland');
+        const searchBar = document.getElementById('searchBar');
+        
+        dynamicIsland.addEventListener('click', () => {
+            dynamicIsland.classList.add('expanded');
+            searchBar.focus();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dynamicIsland.contains(e.target) && searchBar.value === '') {
+                dynamicIsland.classList.remove('expanded');
+            }
+        });
+
+        // Posts handling
+        let lastDoc = null;
+        const postsPerPage = 6;
+        const loading = document.getElementById('loading');
+        const loadMoreBtn = document.getElementById('load-more');
+
+        async function loadPosts(searchQuery = '') {
+            loading.classList.remove('hidden');
+            
+            let query = db.collection('posts').orderBy('timestamp', 'desc');
+            
+            if (searchQuery) {
+                query = query.where('searchTerms', 'array-contains', searchQuery.toLowerCase());
+            }
+            
+            if (lastDoc) {
+                query = query.startAfter(lastDoc);
+            }
+            
+            query = query.limit(postsPerPage);
+
+            try {
+                const snapshot = await query.get();
+                if (snapshot.empty) {
+                    loadMoreBtn.classList.add('hidden');
+                    loading.classList.add('hidden');
+                    return;
+                }
+
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+                loadMoreBtn.classList.remove('hidden');
+
+                snapshot.forEach((doc, index) => {
+                    const post = doc.data();
+                    const postElement = createPostElement(doc.id, post, index);
+                    document.getElementById('postsContainer').appendChild(postElement);
+                });
+            } catch (error) {
+                console.error("Error loading posts:", error);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function createPostElement(id, post, index) {
+            const article = document.createElement('article');
+            article.className = 'post-card';
+            article.style.animationDelay = `${index * 0.1}s`;
+            article.innerHTML = `
+                <img src="${post.imageUrl}" alt="${post.title}" class="post-image">
+                <div class="post-content">
+                    <h2 class="post-title">${post.title}</h2>
+                    <p class="post-description">${post.description}</p>
+                    <a href="${post.buttonLink}" class="post-button">
+                        ${post.buttonText}
+                        <span class="material-icons">arrow_forward</span>
+                    </a>
+                    <div class="post-meta">
+                        <button class="like-button" data-post-id="${id}">
+                            <span class="material-icons">favorite_border</span>
+                            <span>${post.likes || 0}</span>
+                        </button>
+                        <span class="post-date">${new Date(post.timestamp?.toDate()).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `;
+
+            // Add like functionality
+            const likeButton = article.querySelector('.like-button');
+            likeButton.addEventListener('click', () => handleLike(id, likeButton));
+
+            return article;
+        }
+
+        async function handleLike(postId, button) {
+            try {
+                const postRef = db.collection('posts').doc(postId);
+                await postRef.update({
+                    likes: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                const likesCount = button.querySelector('span:last-child');
+                likesCount.textContent = parseInt(likesCount.textContent) + 1;
+                button.classList.add('liked');
+                button.querySelector('.material-icons').textContent = 'favorite';
+            } catch (error) {
+                console.error("Error updating likes:", error);
+            }
+        }
+
+        // Search functionality
+        let searchTimeout;
+        searchBar.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchQuery = e.target.value.trim();
+                document.getElementById('postsContainer').innerHTML = '';
+                lastDoc = null;
+                loadPosts(searchQuery);
+            }, 300);
+        });
+
+        // Load more functionality
+        loadMoreBtn.addEventListener('click', () => {
+            loadPosts(searchBar.value.trim());
+        });
+
+        // Initial load
+        loadPosts();
+
+        // Intersection Observer for infinite scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !loading.classList.contains('hidden')) {
+                    loadPosts(searchBar.value.trim());
+                }
+            });
+        }, { threshold: 0.5 });
+
+        observer.observe(loadMoreBtn);
+    </script>
+</body>
+</html>
