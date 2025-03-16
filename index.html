@@ -633,4 +633,91 @@
                         <button class="post-meta-button like-button" data-post-id="${id}">
                             <span class="material-icons">favorite_border</span>
                             <span>${post.likes || 0}</span>
-                    
+                                            </button>
+                        <button class="post-meta-button" onclick="openComments('${id}')">
+                            <span class="material-icons">chat_bubble_outline</span>
+                            <span>Comments</span>
+                        </button>
+                        <button class="post-meta-button" onclick="copyLink('${postUrl}')">
+                            <span class="material-icons">share</span>
+                        </button>
+                        <a href="${post.buttonLink}" class="post-meta-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            const likeButton = article.querySelector('.like-button');
+            likeButton.addEventListener('click', () => handleLike(id, likeButton));
+
+            return article;
+        }
+
+        function copyLink(url) {
+            navigator.clipboard.writeText(url);
+            showToast('Link copied to clipboard!');
+        }
+
+        async function handleLike(postId, button) {
+            if (!auth.currentUser) {
+                showToast('Please login to like posts');
+                return;
+            }
+
+            try {
+                const postRef = db.collection('posts').doc(postId);
+                await postRef.update({
+                    likes: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                const likesCount = button.querySelector('span:last-child');
+                likesCount.textContent = parseInt(likesCount.textContent) + 1;
+                button.classList.add('liked');
+                button.querySelector('.material-icons').textContent = 'favorite';
+            } catch (error) {
+                console.error("Error updating likes:", error);
+                showToast('Error updating likes');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Search functionality
+        let searchTimeout;
+        searchBar.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchQuery = e.target.value.trim();
+                lastDoc = null; // Reset pagination when searching
+                loadPosts(searchQuery);
+            }, 300);
+        });
+
+        // Check for direct post link
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('post');
+        if (postId) {
+            db.collection('posts').doc(postId).get().then(doc => {
+                if (doc.exists) {
+                    openComments(postId);
+                }
+            });
+        }
+
+        // Auto-login check
+        const savedEmail = localStorage.getItem('userEmail');
+        const savedPassword = localStorage.getItem('userPassword');
+        if (savedEmail && savedPassword) {
+            auth.signInWithEmailAndPassword(savedEmail, savedPassword)
+                .catch(error => console.error("Auto-login failed:", error));
+        }
+    </script>
+</body>
+</html>
