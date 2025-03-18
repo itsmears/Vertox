@@ -3,104 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Vertox Blog</title>
-    
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Google Fonts -->
+    <title>Login - VERTØX Network</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2563eb;
-            --bg-color: #ffffff;
-            --text-color: #1f2937;
+            --primary-color: #4F46E5;
+            --secondary-color: #818CF8;
+            --success-color: #22C55E;
+            --danger-color: #EF4444;
+            --background-light: #F9FAFB;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            background: url('https://i.ibb.co/zWxkGCpH/vexians-fdz-20250312-0001-1.gif') center/cover fixed no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .login-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
             padding: 2rem;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .login-header {
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--background-light);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6B7280;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: -2px;
+        }
+
+        .form-container {
+            padding: 2rem;
+        }
+
+        .logo {
             text-align: center;
             margin-bottom: 2rem;
-            color: white;
         }
 
-        .login-header h1 {
+        .logo h1 {
+            color: var(--primary-color);
             font-size: 2rem;
             margin-bottom: 0.5rem;
         }
 
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        .logo p {
+            color: #6B7280;
         }
 
         .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .input-group {
             position: relative;
         }
 
-        .form-group input {
+        .input-group input {
             width: 100%;
-            padding: 1rem;
-            padding-left: 3rem;
-            border: none;
+            padding: 0.75rem 1rem;
+            padding-left: 2.5rem;
+            border: 2px solid #E5E7EB;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
             font-size: 1rem;
             transition: all 0.3s;
         }
 
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .form-group input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .form-group .material-icons {
+        .input-group .material-icons {
             position: absolute;
-            left: 1rem;
+            left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: white;
-            pointer-events: none;
+            color: #9CA3AF;
         }
 
-        .login-button {
+        .input-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 1rem;
             border-radius: 10px;
             font-size: 1rem;
             font-weight: 500;
@@ -112,67 +143,139 @@
             gap: 0.5rem;
         }
 
-        .login-button:hover {
+        .submit-btn:hover {
+            background: var(--secondary-color);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
         }
 
-        .error-message {
-            color: #ef4444;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 0.75rem;
-            border-radius: 8px;
+        .submit-btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid white;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: var(--success-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
             margin-bottom: 1rem;
             display: none;
         }
 
-        .discord-link {
-            text-align: center;
-            margin-top: 1rem;
-            color: white;
+        #registerForm {
+            display: none;
         }
 
-        .discord-link a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .discord-link a:hover {
-            text-decoration: underline;
+        .error-message.visible {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>Welcome Back</h1>
-            <p>Login to access Vertox Blog</p>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-form="loginForm">Login</div>
+            <div class="tab" data-form="registerForm">Register</div>
         </div>
 
-        <div class="error-message" id="errorMessage"></div>
-
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <span class="material-icons">email</span>
-                <input type="email" id="email" placeholder="Email" required>
+        <div class="form-container">
+            <div class="logo">
+                <h1>VERTØX</h1>
+                <p>Welcome back!</p>
             </div>
-            <div class="form-group">
-                <span class="material-icons">lock</span>
-                <input type="password" id="password" placeholder="Password" required>
-            </div>
-            <button type="submit" class="login-button">
-                <span class="material-icons">login</span>
-                Login
-            </button>
-        </form>
 
-        <div class="discord-link">
-            <p>No account? <a href="https://discord.gg/vertox" target="_blank">Join our Discord</a></p>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <div class="input-group">
+                        <span class="material-icons">email</span>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="error-message" id="loginEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-group">
+                        <span class="material-icons">lock</span>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <div class="error-message" id="loginPasswordError"></div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="material-icons">login</span>
+                    Login
+                </button>
+            </form>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <div class="input-group">
+                        <span class="material-icons">email</span>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="error-message" id="registerEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <div class="input-group">
+                        <span class="material-icons">person</span>
+                        <input type="text" id="registerUsername" required>
+                    </div>
+                    <div class="error-message" id="registerUsernameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <div class="input-group">
+                        <span class="material-icons">lock</span>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <div class="error-message" id="registerPasswordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="profilePicture">Profile Picture URL</label>
+                    <div class="input-group">
+                        <span class="material-icons">image</span>
+                        <input type="url" id="profilePicture">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="material-icons">person_add</span>
+                    Register
+                </button>
+            </form>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, collection, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA8J2CpnOfNUlGRiCgwWjcYrp6Fz9UraBw",
@@ -185,42 +288,162 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // Check if user is already logged in
-        auth.onAuthStateChanged((user) => {
+        // Check for existing session
+        auth.onAuthStateChanged(user => {
             if (user) {
-                window.location.href = 'index.html';
+                window.location.href = '/index.html';
             }
         });
 
-        // Login form handler
-        const loginForm = document.getElementById('loginForm');
-        const errorMessage = document.getElementById('errorMessage');
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const forms = {
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm')
+        };
 
-        loginForm.addEventListener('submit', async (e) => {
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const formId = tab.dataset.form;
+                
+                // Update tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show selected form
+                Object.values(forms).forEach(form => form.style.display = 'none');
+                forms[formId].style.display = 'block';
+                
+                // Update welcome message
+                document.querySelector('.logo p').textContent = 
+                    formId === 'loginForm' ? 'Welcome back!' : 'Create your account';
+                
+                // Clear any existing errors
+                clearErrors();
+            });
+        });
+
+        // Helper functions
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.classList.add('visible');
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.textContent = '';
+                el.classList.remove('visible');
+            });
+        }
+
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            setTimeout(() => successElement.style.display = 'none', 3000);
+        }
+
+        function setLoading(form, isLoading) {
+            const button = form.querySelector('button[type="submit"]');
+            button.disabled = isLoading;
+            button.innerHTML = isLoading ? 
+                '<span class="loading"></span>' :
+                `<span class="material-icons">${form.id === 'loginForm' ? 'login' : 'person_add'}</span>${form.id === 'loginForm' ? 'Login' : 'Register'}`;
+        }
+
+        // Login form submission
+        forms.loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const submitButton = loginForm.querySelector('button');
-            
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="material-icons">hourglass_empty</span> Logging in...';
-            errorMessage.style.display = 'none';
+            clearErrors();
+            setLoading(forms.loginForm, true);
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
             try {
-                await auth.signInWithEmailAndPassword(email, password);
-                // Save credentials for auto-login
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userPassword', password);
-                window.location.href = 'index.html';
+                await signInWithEmailAndPassword(auth, email, password);
+                showSuccess('Login successful! Redirecting...');
             } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<span class="material-icons">login</span> Login';
+                console.error('Login error:', error);
+                let errorMessage = 'An error occurred during login. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                }
+                
+                showError('loginEmailError', errorMessage);
+                setLoading(forms.loginForm, false);
+            }
+        });
+
+        // Register form submission
+        forms.registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+            setLoading(forms.registerForm, true);
+
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const username = document.getElementById('registerUsername').value;
+            const profilePicture = document.getElementById('profilePicture').value || 
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=4F46E5&color=fff`;
+
+            try {
+                // Validate inputs
+                if (password.length < 6) {
+                    throw new Error('Password must be at least 6 characters long');
+                }
+
+                if (username.length < 3) {
+                    throw new Error('Username must be at least 3 characters long');
+                }
+
+                // Create user account
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Update profile
+                await updateProfile(user, {
+                    displayName: username,
+                    photoURL: profilePicture
+                });
+
+                // Store additional user data
+                await setDoc(doc(db, 'users', user.uid), {
+                    username,
+                    email,
+                    profilePicture,
+                    createdAt: serverTimestamp()
+                });
+
+                showSuccess('Registration successful! Redirecting...');
+            } catch (error) {
+                console.error('Registration error:', error);
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address format.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please use at least 6 characters.';
+                }
+                
+                showError('registerEmailError', errorMessage);
+                setLoading(forms.registerForm, false);
             }
         });
     </script>
